@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Converter</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <style>
+    /* Radial gradient background */
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #EEAECA;
+      background: radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+    }
+
+    .box {
+      max-width: 900px;
+      width: 100%;
+      margin: 20px;
+      background: #ffffffcc; /* semi-transparent white */
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+      color: #222;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+      background: #fdfdfd;
+      transition: all 0.3s ease;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #94BBE9;
+      box-shadow: 0 0 8px rgba(148,187,233,0.6);
+    }
+
+    .result-wrap {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    input[readonly] {
+      background: #f1f7ff;
+      color: #111;
+      font-family: monospace;
+      white-space: nowrap;
+      overflow-x: auto;
+      padding-right: 14px;
+    }
+
+    button.copy {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 0;
+      background: linear-gradient(135deg, #94BBE9, #EEAECA);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    button.copy:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 14px;
+      color: #333;
+      margin-top: 20px;
+      padding: 10px 0;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <label for="base36">Enter the full HTML question link or 5-character code</label>
+    <input id="base36" type="text" maxlength="120" />
+
+    <label for="link" style="margin-top:12px;">OPRC Converted Link</label>
+    <div class="result-wrap">
+      <input id="link" type="text" readonly />
+      <button class="copy" id="copyBtn">Copy</button>
+    </div>
+  </div>
+
+  <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
+
+<script>
+function base36ToDecimal(s) {
+  if (!s) return NaN;
+  s = String(s).trim().toUpperCase();
+  if (!/^[0-9A-Z]+$/.test(s)) return NaN;
+  let value = 0;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s.charCodeAt(i);
+    let digit;
+    if (ch >= 48 && ch <= 57) digit = ch - 48;
+    else if (ch >= 65 && ch <= 90) digit = ch - 55;
+    else return NaN;
+    value = value * 36 + digit;
+  }
+  return value;
+}
+
+function extractCodeFromUrl(s) {
+  if (!s) return null;
+  const m = s.match(/\/question\/([0-9A-Za-z]{5})/i);
+  if (m && m[1]) return m[1];
+  const m2 = s.match(/\b([0-9A-Za-z]{5})\b/);
+  if (m2 && m2[1]) return m2[1];
+  return null;
+}
+
+const base36Input = document.getElementById('base36');
+const linkOutput = document.getElementById('link');
+const copyBtn = document.getElementById('copyBtn');
+const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
+
+function updateConvertedLink() {
+  const raw = base36Input.value.trim();
+  if (raw.length === 0) {
+    linkOutput.value = "";
+    return;
+  }
+  let code = extractCodeFromUrl(raw);
+  if (!code && /^[0-9A-Za-z]{1,10}$/.test(raw)) {
+    code = raw;
+  }
+  if (!code) {
+    linkOutput.value = "No 5-character code found";
+    return;
+  }
+  const dec = base36ToDecimal(code);
+  if (Number.isNaN(dec)) {
+    linkOutput.value = "Invalid code";
+    return;
+  }
+  linkOutput.value = PREFIX + dec;
+}
+
+base36Input.addEventListener('input', updateConvertedLink);
+base36Input.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
+
+copyBtn.addEventListener('click', () => {
+  const txt = linkOutput.value;
+  if (!txt) return;
+  navigator.clipboard?.writeText(txt).then(() => {
+    copyBtn.textContent = 'Copied';
+    setTimeout(()=> copyBtn.textContent = 'Copy', 1200);
+  }).catch(() => {
+    linkOutput.select();
+    try { document.execCommand('copy'); copyBtn.textContent = 'Copied'; setTimeout(()=> copyBtn.textContent = 'Copy', 1200); }
+    catch { /* ignore */ }
+  });
+});
+</script>
+</body>
+</html>
