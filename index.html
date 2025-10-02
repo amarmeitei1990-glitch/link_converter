@@ -15,20 +15,22 @@
       margin: 0;
     }
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Helvetica Neue";
       display: flex;
       align-items: center;
       justify-content: center;
       background: radial-gradient(1200px 600px at 30% 20%, rgba(238,174,202,0.95) 0%, rgba(210,180,220,0.7) 45%, rgba(148,187,233,0.95) 100%);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      padding: 24px;
+      box-sizing: border-box;
     }
 
     /* Card / box */
     .box {
       width: 900px;
       max-width: calc(100% - 48px);
-      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,250,253,0.92));
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,253,0.94));
       border-radius: 12px;
       padding: 28px;
       box-shadow: 0 18px 40px rgba(0,0,0,0.12);
@@ -36,22 +38,18 @@
     }
 
     h1 {
-      font-size: 18px;
-      margin: 0 0 12px 0;
-      color: #2b2b2b;
-      font-weight: 700;
+      font-size: 20px;
+      margin: 0 0 8px 0;
+      color: #222;
+      font-weight: 800;
     }
 
-    p.lead {
-      margin: 0 0 18px 0;
-      font-size: 13px;
-      color: #444;
-    }
+    /* Removed the brief lead paragraph as requested (this area intentionally left blank) */
 
     label {
       font-weight: 700;
       display: block;
-      margin-bottom: 8px;
+      margin: 14px 0 8px 0;
       color: #222;
       font-size: 14px;
     }
@@ -102,18 +100,38 @@
     button.copy:active { transform: translateY(1px); }
     button.copy[disabled] { opacity: 0.6; cursor: default; }
 
-    .note {
+    .status {
       margin-top: 10px;
       color: #666;
       font-size: 13px;
+      min-height: 18px;
     }
 
     footer {
       text-align: center;
       font-size: 13px;
       color: #333;
-      margin-top: 22px;
+      margin-top: 18px;
       opacity: 0.9;
+    }
+
+    /* Disclaimer block style (separated, minimal) */
+    .disclaimer {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      background: rgba(255,255,255,0.6);
+      border-radius: 8px;
+      font-size: 13px;
+      color: #444;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .disclaimer a {
+      color: #3366cc;
+      text-decoration: none;
+      font-weight: 600;
     }
 
     /* small screen tweak */
@@ -126,10 +144,14 @@
 <body>
   <div class="box" role="main" aria-labelledby="title">
     <h1 id="title">JustAnswer OPRC Link Converter</h1>
-    <p class="lead">Paste a JustAnswer question URL (or the 5–7 character code) and get the converted OPRC link.</p>
 
-    <label for="base36">Enter the full HTML question link or 5–7 character code</label>
-    <input id="base36" type="text" maxlength="200" placeholder="Paste JustAnswer link or code here (e.g. abc12 or https://www.justanswer.com/question/abc12/...)"/>
+    <!-- USER REQUEST: Removed the short lead sentence here (as per screenshot request) -->
+
+    <!-- Label edited to remove "or 5–7 character code" as requested -->
+    <label for="base36">Enter the full HTML question link</label>
+    <input id="base36" type="text" maxlength="200"
+           placeholder="Paste JustAnswer link here (e.g. https://www.justanswer.com/question/abc12/...)"
+           aria-describedby="status" />
 
     <label for="link" style="margin-top:12px;">OPRC Converted Link</label>
     <div class="result-wrap">
@@ -137,19 +159,26 @@
       <button class="copy" id="copyBtn" type="button" disabled>Copy</button>
     </div>
 
-    <div class="note" id="status" aria-live="polite"></div>
+    <div class="status" id="status" aria-live="polite"></div>
 
     <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
+
+    <!-- Professional disclaimer with clickable mailto link (opens email client) -->
+    <div class="disclaimer" role="contentinfo">
+      <strong>Disclaimer:</strong> This tool does not collect, retain, or share any user data. It is provided solely to convert JustAnswer
+      <code>.html</code> question URLs into OPRC-compatible links for convenience. If you have concerns, questions, or feedback,
+      please contact me at
+      <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
+    </div>
   </div>
 
 <script>
 /*
-  Improvements made:
-  - Use URL parsing when possible
-  - Accept 5-7 character base36 codes (not just 5)
-  - If URL contains numeric ?T= param, handle it
-  - Validate code before base36 -> decimal conversion
-  - Show friendly status messages and disable copy when invalid
+  Same robust converter logic included:
+  - URL parsing first
+  - Accepts 5-7 character alphanumeric codes embedded in the URL or plain text
+  - Handles numeric ?T= values if present
+  - Validates before converting
 */
 
 const base36Input = document.getElementById('base36');
@@ -159,16 +188,11 @@ const statusEl = document.getElementById('status');
 
 const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
 
-/* Convert a base36 string (0-9, A-Z) to decimal number (integer).
-   Returns NaN on invalid input. */
 function base36ToDecimal(s) {
   if (!s) return NaN;
   s = String(s).trim().toUpperCase();
   if (!/^[0-9A-Z]+$/.test(s)) return NaN;
-
-  // Prevent extremely long strings that could overflow
-  if (s.length > 20) return NaN;
-
+  if (s.length > 20) return NaN; // safety
   let value = 0;
   for (let i = 0; i < s.length; i++) {
     const ch = s.charCodeAt(i);
@@ -181,39 +205,24 @@ function base36ToDecimal(s) {
   return value;
 }
 
-/* Extract plausible question code from the input.
-   Accepts:
-     - full URLs like: https://www.justanswer.com/question/abc12/...
-     - URLs containing ?T=123456
-     - direct code strings (5-7 alnum)
-     - numeric string (already decimal)
-*/
 function extractCodeFromUrl(s) {
   if (!s) return null;
   const raw = String(s).trim();
 
-  // Try URL parsing first
   try {
     const url = new URL(raw);
-    // If URL has numeric T parameter, use it as final decimal
     const tParam = url.searchParams.get('T') || url.searchParams.get('t');
     if (tParam && /^\d+$/.test(tParam)) {
       return { type: 'decimal', value: tParam };
     }
-
-    // pathname pattern like /question/abc12 or /question/abc123/...
     const pathMatch = url.pathname.match(/\/question\/([0-9A-Za-z]{5,7})/i);
     if (pathMatch && pathMatch[1]) {
       return { type: 'base36', value: pathMatch[1] };
     }
-
-    // Sometimes code appears elsewhere in path
     const anyMatch = url.pathname.match(/\b([0-9A-Za-z]{5,7})\b/i);
     if (anyMatch && anyMatch[1]) {
       return { type: 'base36', value: anyMatch[1] };
     }
-
-    // Fallback: search query params for possible code keys like 'q' or 'id'
     for (const key of ['q','id','code']) {
       const v = url.searchParams.get(key);
       if (v && /^[0-9A-Za-z]{5,7}$/.test(v)) {
@@ -221,20 +230,14 @@ function extractCodeFromUrl(s) {
       }
     }
   } catch (e) {
-    // not a valid URL — treat as plain string below
+    // Not a URL; continue to plain text handling
   }
 
-  // Plain input string: if numeric -> treat as decimal
   if (/^\d+$/.test(raw)) return { type: 'decimal', value: raw };
-
-  // direct code like abc12 (5-7 alnum)
   const direct = raw.match(/^[0-9A-Za-z]{5,7}$/i);
   if (direct) return { type: 'base36', value: direct[0] };
-
-  // maybe a longer text containing a 5-7 char token
   const embedded = raw.match(/\b([0-9A-Za-z]{5,7})\b/);
   if (embedded) return { type: 'base36', value: embedded[1] };
-
   return null;
 }
 
@@ -244,10 +247,7 @@ function updateConvertedLink() {
   copyBtn.disabled = true;
   statusEl.textContent = '';
 
-  if (raw.trim().length === 0) {
-    statusEl.textContent = '';
-    return;
-  }
+  if (raw.trim().length === 0) return;
 
   const extracted = extractCodeFromUrl(raw);
   if (!extracted) {
@@ -256,7 +256,6 @@ function updateConvertedLink() {
   }
 
   if (extracted.type === 'decimal') {
-    // already decimal number — validate and use
     const decString = String(extracted.value);
     if (!/^\d+$/.test(decString)) {
       statusEl.textContent = 'Invalid numeric value found.';
@@ -268,15 +267,12 @@ function updateConvertedLink() {
     return;
   }
 
-  // base36 -> decimal flow
   const code = String(extracted.value).trim().toUpperCase();
-  // Validate base36 pattern
   if (!/^[0-9A-Z]+$/.test(code)) {
     statusEl.textContent = 'Extracted code contains invalid characters.';
     return;
   }
 
-  // Convert
   const dec = base36ToDecimal(code);
   if (Number.isNaN(dec) || !isFinite(dec)) {
     statusEl.textContent = 'Conversion failed (invalid or too large).';
@@ -288,13 +284,9 @@ function updateConvertedLink() {
   statusEl.textContent = `Converted code "${code}" → ${dec}.`;
 }
 
-/* Event wiring */
 base36Input.addEventListener('input', updateConvertedLink);
-
-// handle paste (small delay to let paste populate)
 base36Input.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
 
-// copy button behaviour
 copyBtn.addEventListener('click', async () => {
   const txt = linkOutput.value;
   if (!txt) return;
@@ -310,13 +302,12 @@ copyBtn.addEventListener('click', async () => {
     copyBtn.textContent = 'Copied';
     setTimeout(()=> copyBtn.textContent = old, 1300);
   } catch (err) {
-    // fallback: select so user can press ctrl+c
     linkOutput.select();
     statusEl.textContent = 'Unable to auto-copy. Text selected — press Ctrl+C to copy.';
   }
 });
 
-// Initialize if there's prefilled content
+// initialize
 updateConvertedLink();
 </script>
 </body>
