@@ -88,14 +88,6 @@
       -webkit-background-clip:text; -webkit-text-fill-color:transparent;
       animation: gradient-move 6s infinite linear;
     }
-    footer a {
-      color:inherit;
-      text-decoration:none;
-      font-weight:700;
-    }
-    footer a:hover {
-      text-decoration:underline;
-    }
 
     .disclaimer {
       margin-top:16px; padding:14px; border-radius:10px; font-size:13px; font-weight:600;
@@ -128,6 +120,7 @@
       <input id="outputLink" type="text" readonly aria-live="polite" />
     </div>
 
+    <!-- Buttons are now placed BELOW the converted link box -->
     <div class="buttons" role="group" aria-label="Actions">
       <button id="copyBtn" class="btn copy" type="button" disabled>Copy</button>
       <button id="clearBtn" class="btn clear" type="button">Clear</button>
@@ -135,7 +128,7 @@
 
     <div id="status" class="status" aria-live="polite"></div>
 
-    <footer>© 2025 <a href="https://www.github.com/amarmeitei1990-glitch" target="_blank">www.github.com/amarmeitei1990-glitch</a>. All rights reserved.</footer>
+    <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
 
     <div class="disclaimer" role="note">
       Disclaimer: This tool does not collect, store, or share any data. It is an independent website provided only to convert links into a compatible format for ease of use. This website does not represent, endorse, or affiliate with any other website or company. For concerns or feedback, please email <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
@@ -143,6 +136,14 @@
   </div>
 
 <script>
+/* Behavior retained:
+   - Extract the 5-character code immediately after the first category segment:
+     (domain)/(category)/(code... )
+     e.g. /software/tbigp-...  -> code = 'tbigp' (first 5 alnum chars of segment[1])
+   - Convert that 5-char base36 to decimal and output PREFIX + decimal
+   - If invalid, show status message and disable Copy button
+*/
+
 const inputEl = document.getElementById('inputLink');
 const outputEl = document.getElementById('outputLink');
 const copyBtn = document.getElementById('copyBtn');
@@ -151,6 +152,7 @@ const statusEl = document.getElementById('status');
 
 const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
 
+/* Convert 5-char base36 to decimal */
 function base36ToDecimal5(s) {
   if (!s) return NaN;
   const t = String(s).trim().toUpperCase();
@@ -167,13 +169,88 @@ function base36ToDecimal5(s) {
   return value;
 }
 
+/* Extract the 5-char code that follows the category.
+   e.g. path = /software/tbigp-signed-...  -> segments[0] = 'software', segments[1] = 'tbigp-signed-...'
+   We take the first 5 alnum chars from segments[1] only if segments.length >= 2
+*/
 function extractFiveCode(urlString) {
   if (!urlString) return null;
   let parsed;
   try {
+    // allow user to paste a bare host (without scheme) — add https for parsing
     parsed = new URL(urlString.trim().startsWith('http') ? urlString.trim() : 'https://' + urlString.trim());
   } catch {
     return null;
   }
   const path = parsed.pathname || '';
-  const
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length < 2) return null; // require at least category + slug
+  const slug = segments[1];
+  const m = slug.match(/^([0-9A-Za-z]{5})/); // strict first-5-chars match
+  return m ? m[1] : null;
+}
+
+function updateConvertedLink() {
+  const raw = inputEl.value || '';
+  outputEl.value = '';
+  copyBtn.disabled = true;
+  statusEl.textContent = '';
+
+  if (!raw.trim()) return;
+
+  const code = extractFiveCode(raw);
+  if (!code) {
+    statusEl.textContent = 'Invalid link. Could not find a 5-character code immediately after the category segment.';
+    return;
+  }
+
+  const dec = base36ToDecimal5(code);
+  if (Number.isNaN(dec)) {
+    statusEl.textContent = 'Invalid 5-character code.';
+    return;
+  }
+
+  outputEl.value = PREFIX + dec;
+  copyBtn.disabled = false;
+  statusEl.textContent = `Converted code "${code}" → ${dec}.`;
+}
+
+/* Copy functionality */
+copyBtn.addEventListener('click', async () => {
+  const text = outputEl.value;
+  if (!text) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      outputEl.select();
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+    }
+    const old = copyBtn.textContent;
+    copyBtn.textContent = 'Copied!';
+    setTimeout(()=> copyBtn.textContent = old, 1200);
+  } catch {
+    outputEl.select();
+    statusEl.textContent = 'Auto-copy failed. Text selected — press Ctrl+C to copy.';
+  }
+});
+
+/* Clear functionality */
+clearBtn.addEventListener('click', () => {
+  inputEl.value = '';
+  outputEl.value = '';
+  statusEl.textContent = '';
+  copyBtn.disabled = true;
+  inputEl.focus();
+});
+
+/* Wire input events */
+inputEl.addEventListener('input', updateConvertedLink);
+inputEl.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
+
+/* initialize */
+updateConvertedLink();
+</script>
+</body>
+</html>
