@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Link Converter</title>
   <style>
-    /* Background gradient */
     html, body { height:100%; margin:0; }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -82,7 +81,7 @@
   <div class="box">
     <h1>Link Converter</h1>
 
-    <label for="inputLink">Enter the full HTML link</label>
+    <label for="inputLink">Enter the link</label>
     <input id="inputLink" type="text" maxlength="300">
 
     <label for="outputLink">Converted Link</label>
@@ -111,7 +110,7 @@ const statusEl = document.getElementById('status');
 
 const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
 
-/* Base36 to decimal (5-char strict) */
+/* Convert 5-char base36 to decimal */
 function base36ToDecimal5(s) {
   if (!s) return NaN;
   const t = String(s).trim().toUpperCase();
@@ -128,11 +127,20 @@ function base36ToDecimal5(s) {
   return value;
 }
 
-/* Extract the 5-char code that appears immediately before ".html" */
-function extractFiveCodeFromHtmlUrl(raw) {
-  if (!raw) return null;
-  const m = raw.trim().match(/\/([0-9A-Za-z]{5})\.html$/);
-  return m ? m[1] : null;
+/* Extract last path segment and check if exactly 5 alphanumeric chars */
+function extractFiveCode(urlString) {
+  if (!urlString) return null;
+  let parsed;
+  try {
+    parsed = new URL(urlString.trim().startsWith('http') ? urlString.trim() : 'https://' + urlString.trim());
+  } catch {
+    return null;
+  }
+  const path = parsed.pathname || '';
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length === 0) return null;
+  const last = segments[segments.length - 1];
+  return /^[0-9A-Za-z]{5}$/.test(last) ? last : null;
 }
 
 function updateConvertedLink() {
@@ -143,9 +151,9 @@ function updateConvertedLink() {
 
   if (!raw.trim()) return;
 
-  const code = extractFiveCodeFromHtmlUrl(raw);
+  const code = extractFiveCode(raw);
   if (!code) {
-    statusEl.textContent = 'Invalid link. The URL must end with 5 characters followed by ".html" (e.g. .../tbi9p.html)';
+    statusEl.textContent = 'Invalid link. The last part of the URL must be exactly 5 letters or digits.';
     return;
   }
 
