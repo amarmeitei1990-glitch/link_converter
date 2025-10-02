@@ -3,184 +3,188 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Converter</title>
-
-  <!-- Favicon (optional) -->
-  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Link Converter</title>
 
   <style>
-    /* Page background: radial gradient */
+    /* Background gradient */
     html, body {
       height: 100%;
       margin: 0;
     }
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Helvetica Neue";
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(1200px 600px at 30% 20%, rgba(238,174,202,0.95) 0%, rgba(210,180,220,0.7) 45%, rgba(148,187,233,0.95) 100%);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      background: radial-gradient(circle at 30% 20%, #eeaeca, #94bbe9);
       padding: 24px;
       box-sizing: border-box;
     }
 
-    /* Card / box */
+    /* Container box */
     .box {
       width: 900px;
       max-width: calc(100% - 48px);
-      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,253,0.94));
-      border-radius: 12px;
-      padding: 28px;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.12);
-      border: 1px solid rgba(0,0,0,0.04);
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.2);
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      text-align: center;
     }
 
     h1 {
-      font-size: 20px;
-      margin: 0 0 8px 0;
-      color: #222;
+      font-size: 22px;
+      margin: 0 0 18px 0;
       font-weight: 800;
+      background: linear-gradient(90deg, #eeaeca, #94bbe9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradient-move 5s infinite linear;
+      background-size: 200% auto;
     }
-
-    /* Removed the brief lead paragraph as requested (this area intentionally left blank) */
 
     label {
       font-weight: 700;
       display: block;
-      margin: 14px 0 8px 0;
-      color: #222;
-      font-size: 14px;
+      margin: 16px 0 8px 0;
+      font-size: 15px;
+      background: linear-gradient(90deg, #94bbe9, #eeaeca, #d18ce0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% auto;
+      animation: gradient-move 4s infinite linear;
     }
 
     input[type="text"] {
       width: 100%;
       padding: 12px 14px;
-      border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 10px;
+      border: 2px solid;
+      border-image-slice: 1;
+      border-image-source: linear-gradient(90deg, #eeaeca, #94bbe9);
+      border-radius: 12px;
       font-size: 16px;
       box-sizing: border-box;
       margin-bottom: 12px;
-      background: #fff;
-      transition: all 0.22s ease;
+      transition: 0.4s;
     }
     input[type="text"]:focus {
       outline: none;
-      border-color: rgba(148,187,233,0.95);
-      box-shadow: 0 6px 20px rgba(148,187,233,0.14);
+      box-shadow: 0 0 12px rgba(148,187,233,0.8);
     }
 
     .result-wrap {
       display: flex;
       gap: 10px;
       align-items: center;
+      justify-content: center;
     }
 
     input[readonly] {
-      background: #f4fbff;
-      color: #111;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
-      white-space: nowrap;
+      background: #f9fbff;
+      font-family: monospace;
       overflow-x: auto;
-      padding-right: 14px;
-      border: 1.5px solid rgba(0,0,0,0.05);
     }
 
     button.copy {
       padding: 10px 16px;
-      border-radius: 10px;
-      border: 0;
-      background: linear-gradient(135deg, #94BBE9, #EEAECA);
-      color: white;
-      font-weight: 700;
+      border-radius: 12px;
+      border: none;
       cursor: pointer;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(270deg, #94bbe9, #eeaeca, #d18ce0);
+      background-size: 300% 300%;
+      animation: gradient-move 6s infinite linear;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    button.copy:active { transform: translateY(1px); }
-    button.copy[disabled] { opacity: 0.6; cursor: default; }
+    button.copy:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    button.copy:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
 
     .status {
       margin-top: 10px;
-      color: #666;
-      font-size: 13px;
-      min-height: 18px;
+      font-size: 14px;
+      color: #444;
+      min-height: 20px;
     }
 
     footer {
-      text-align: center;
-      font-size: 13px;
-      color: #333;
       margin-top: 18px;
-      opacity: 0.9;
+      font-size: 13px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #eeaeca, #94bbe9, #d18ce0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradient-move 6s infinite linear;
+      background-size: 200% auto;
     }
 
-    /* Disclaimer block style (separated, minimal) */
     .disclaimer {
-      margin-top: 14px;
-      padding: 14px 16px;
-      border-top: 1px solid rgba(0,0,0,0.05);
-      background: rgba(255,255,255,0.6);
-      border-radius: 8px;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 10px;
       font-size: 13px;
-      color: #444;
-      line-height: 1.45;
-      text-align: center;
+      font-weight: 600;
+      background: linear-gradient(90deg, #ff758c, #ff7eb3, #6a82fb, #56ccf2);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: blink 1.5s infinite alternate, gradient-move 5s infinite linear;
     }
 
     .disclaimer a {
-      color: #3366cc;
-      text-decoration: none;
-      font-weight: 600;
+      color: inherit;
+      font-weight: 700;
+      text-decoration: underline;
     }
 
-    /* small screen tweak */
-    @media (max-width: 520px) {
-      .box { padding: 18px; }
-      button.copy { padding: 8px 12px; }
+    /* Animations */
+    @keyframes gradient-move {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <div class="box" role="main" aria-labelledby="title">
-    <h1 id="title">JustAnswer OPRC Link Converter</h1>
+  <div class="box">
+    <h1>Link Converter</h1>
 
-    <!-- USER REQUEST: Removed the short lead sentence here (as per screenshot request) -->
+    <label for="base36">Enter the full HTML link</label>
+    <input id="base36" type="text" maxlength="200" />
 
-    <!-- Label edited to remove "or 5–7 character code" as requested -->
-    <label for="base36">Enter the full HTML question link</label>
-    <input id="base36" type="text" maxlength="200"
-           placeholder="Paste JustAnswer link here (e.g. https://www.justanswer.com/question/abc12/...)"
-           aria-describedby="status" />
-
-    <label for="link" style="margin-top:12px;">OPRC Converted Link</label>
+    <label for="link">Converted Link</label>
     <div class="result-wrap">
-      <input id="link" type="text" readonly aria-live="polite" placeholder="Converted link will appear here" />
+      <input id="link" type="text" readonly />
       <button class="copy" id="copyBtn" type="button" disabled>Copy</button>
     </div>
 
-    <div class="status" id="status" aria-live="polite"></div>
+    <div class="status" id="status"></div>
 
     <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
 
-    <!-- Professional disclaimer with clickable mailto link (opens email client) -->
-    <div class="disclaimer" role="contentinfo">
-      <strong>Disclaimer:</strong> This tool does not collect, retain, or share any user data. It is provided solely to convert JustAnswer
-      <code>.html</code> question URLs into OPRC-compatible links for convenience. If you have concerns, questions, or feedback,
-      please contact me at
+    <div class="disclaimer">
+      Disclaimer: This tool does not collect, store, or share any data.  
+      It is an independent website created solely to convert links into a compatible format for ease of use.  
+      This website does not represent or affiliate with any other website or company.  
+      For concerns or feedback, please email me at  
       <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
     </div>
   </div>
 
 <script>
-/*
-  Same robust converter logic included:
-  - URL parsing first
-  - Accepts 5-7 character alphanumeric codes embedded in the URL or plain text
-  - Handles numeric ?T= values if present
-  - Validates before converting
-*/
-
 const base36Input = document.getElementById('base36');
 const linkOutput = document.getElementById('link');
 const copyBtn = document.getElementById('copyBtn');
@@ -192,7 +196,6 @@ function base36ToDecimal(s) {
   if (!s) return NaN;
   s = String(s).trim().toUpperCase();
   if (!/^[0-9A-Z]+$/.test(s)) return NaN;
-  if (s.length > 20) return NaN; // safety
   let value = 0;
   for (let i = 0; i < s.length; i++) {
     const ch = s.charCodeAt(i);
@@ -208,107 +211,64 @@ function base36ToDecimal(s) {
 function extractCodeFromUrl(s) {
   if (!s) return null;
   const raw = String(s).trim();
-
   try {
     const url = new URL(raw);
     const tParam = url.searchParams.get('T') || url.searchParams.get('t');
-    if (tParam && /^\d+$/.test(tParam)) {
-      return { type: 'decimal', value: tParam };
-    }
+    if (tParam && /^\d+$/.test(tParam)) return { type: 'decimal', value: tParam };
     const pathMatch = url.pathname.match(/\/question\/([0-9A-Za-z]{5,7})/i);
-    if (pathMatch && pathMatch[1]) {
-      return { type: 'base36', value: pathMatch[1] };
-    }
-    const anyMatch = url.pathname.match(/\b([0-9A-Za-z]{5,7})\b/i);
-    if (anyMatch && anyMatch[1]) {
-      return { type: 'base36', value: anyMatch[1] };
-    }
-    for (const key of ['q','id','code']) {
-      const v = url.searchParams.get(key);
-      if (v && /^[0-9A-Za-z]{5,7}$/.test(v)) {
-        return { type: 'base36', value: v };
-      }
-    }
-  } catch (e) {
-    // Not a URL; continue to plain text handling
-  }
-
+    if (pathMatch) return { type: 'base36', value: pathMatch[1] };
+  } catch {}
   if (/^\d+$/.test(raw)) return { type: 'decimal', value: raw };
   const direct = raw.match(/^[0-9A-Za-z]{5,7}$/i);
   if (direct) return { type: 'base36', value: direct[0] };
-  const embedded = raw.match(/\b([0-9A-Za-z]{5,7})\b/);
-  if (embedded) return { type: 'base36', value: embedded[1] };
   return null;
 }
 
 function updateConvertedLink() {
-  const raw = base36Input.value || '';
+  const raw = base36Input.value.trim();
   linkOutput.value = '';
   copyBtn.disabled = true;
   statusEl.textContent = '';
 
-  if (raw.trim().length === 0) return;
-
+  if (!raw) return;
   const extracted = extractCodeFromUrl(raw);
   if (!extracted) {
-    statusEl.textContent = 'No valid code or URL pattern found.';
+    statusEl.textContent = 'Invalid link or code.';
     return;
   }
 
   if (extracted.type === 'decimal') {
-    const decString = String(extracted.value);
-    if (!/^\d+$/.test(decString)) {
-      statusEl.textContent = 'Invalid numeric value found.';
-      return;
-    }
-    linkOutput.value = PREFIX + decString;
+    linkOutput.value = PREFIX + extracted.value;
     copyBtn.disabled = false;
-    statusEl.textContent = 'Decimal (T=) value detected and used.';
+    statusEl.textContent = 'Decimal value used.';
     return;
   }
 
-  const code = String(extracted.value).trim().toUpperCase();
-  if (!/^[0-9A-Z]+$/.test(code)) {
-    statusEl.textContent = 'Extracted code contains invalid characters.';
-    return;
-  }
-
-  const dec = base36ToDecimal(code);
-  if (Number.isNaN(dec) || !isFinite(dec)) {
-    statusEl.textContent = 'Conversion failed (invalid or too large).';
+  const dec = base36ToDecimal(extracted.value);
+  if (Number.isNaN(dec)) {
+    statusEl.textContent = 'Invalid code format.';
     return;
   }
 
   linkOutput.value = PREFIX + dec;
   copyBtn.disabled = false;
-  statusEl.textContent = `Converted code "${code}" → ${dec}.`;
+  statusEl.textContent = `Converted code "${extracted.value}" → ${dec}`;
 }
 
 base36Input.addEventListener('input', updateConvertedLink);
 base36Input.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
 
 copyBtn.addEventListener('click', async () => {
-  const txt = linkOutput.value;
-  if (!txt) return;
+  if (!linkOutput.value) return;
   try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(txt);
-    } else {
-      linkOutput.select();
-      document.execCommand('copy');
-      window.getSelection().removeAllRanges();
-    }
-    const old = copyBtn.textContent;
-    copyBtn.textContent = 'Copied';
-    setTimeout(()=> copyBtn.textContent = old, 1300);
-  } catch (err) {
+    await navigator.clipboard.writeText(linkOutput.value);
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => copyBtn.textContent = 'Copy', 1200);
+  } catch {
     linkOutput.select();
-    statusEl.textContent = 'Unable to auto-copy. Text selected — press Ctrl+C to copy.';
+    document.execCommand('copy');
   }
 });
-
-// initialize
-updateConvertedLink();
 </script>
 </body>
 </html>
