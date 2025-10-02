@@ -81,7 +81,7 @@
   <div class="box">
     <h1>Link Converter</h1>
 
-    <label for="inputLink">Enter the link</label>
+    <label for="inputLink">Enter the full link</label>
     <input id="inputLink" type="text" maxlength="300">
 
     <label for="outputLink">Converted Link</label>
@@ -127,7 +127,11 @@ function base36ToDecimal5(s) {
   return value;
 }
 
-/* Extract last path segment and check if exactly 5 alphanumeric chars */
+/* Extract 5-char code from the URL:
+   - Works for any category (/software/, /question/, /email/, etc.)
+   - Looks at the segment immediately after the category
+   - Only accepts the first 5 alphanumeric chars of that segment
+*/
 function extractFiveCode(urlString) {
   if (!urlString) return null;
   let parsed;
@@ -138,9 +142,10 @@ function extractFiveCode(urlString) {
   }
   const path = parsed.pathname || '';
   const segments = path.split('/').filter(Boolean);
-  if (segments.length === 0) return null;
-  const last = segments[segments.length - 1];
-  return /^[0-9A-Za-z]{5}$/.test(last) ? last : null;
+  if (segments.length < 2) return null; // need at least category + code
+  const slug = segments[1]; // this should contain the 5-char code first
+  const match = slug.match(/^([0-9A-Za-z]{5})/);
+  return match ? match[1] : null;
 }
 
 function updateConvertedLink() {
@@ -153,7 +158,7 @@ function updateConvertedLink() {
 
   const code = extractFiveCode(raw);
   if (!code) {
-    statusEl.textContent = 'Invalid link. The last part of the URL must be exactly 5 letters or digits.';
+    statusEl.textContent = 'Invalid link. Could not find a valid 5-character code after the category.';
     return;
   }
 
