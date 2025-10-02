@@ -14,7 +14,6 @@
       padding:24px; box-sizing:border-box;
     }
 
-    /* Container */
     .box {
       width:900px; max-width:calc(100% - 48px);
       background: rgba(255,255,255,0.92);
@@ -75,58 +74,36 @@
     }
     .disclaimer a { color:inherit; font-weight:700; text-decoration:underline; }
 
-    /* Animations */
     @keyframes gradient-move { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
     @keyframes blink { 0%{opacity:1} 50%{opacity:.5} 100%{opacity:1} }
-
-    /* Responsive tweaks */
-    @media (max-width:520px){ .box{padding:18px} button.copy{padding:8px 12px} }
   </style>
 </head>
 <body>
-  <div class="box" role="main" aria-labelledby="title">
-    <h1 id="title">Link Converter</h1>
+  <div class="box">
+    <h1>Link Converter</h1>
 
     <label for="inputLink">Enter the full HTML link</label>
-    <input id="inputLink" type="text" maxlength="300" aria-describedby="status">
+    <input id="inputLink" type="text" maxlength="300">
 
-    <label for="outputLink" style="margin-top:12px">Converted Link</label>
+    <label for="outputLink">Converted Link</label>
     <div class="result-wrap">
-      <input id="outputLink" type="text" readonly aria-live="polite">
+      <input id="outputLink" type="text" readonly>
       <button id="copyBtn" class="copy" type="button" disabled>Copy</button>
     </div>
 
-    <div id="status" class="status" aria-live="polite"></div>
+    <div id="status" class="status"></div>
 
     <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
 
-    <div class="disclaimer" role="note">
-      Disclaimer: This tool does not collect, store, or share any data. It is an independent website provided only to convert links into a compatible format for ease of use. This website does not represent, endorse, or affiliate with any other website or company. For concerns or feedback, please email <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
+    <div class="disclaimer">
+      Disclaimer: This tool does not collect, store, or share any data.  
+      It is an independent website provided only to convert links into a compatible format for ease of use.  
+      This website does not represent, endorse, or affiliate with any other website or company.  
+      For concerns or feedback, please email <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
     </div>
   </div>
 
 <script>
-/*
-  New rules implemented:
-  - Input must start with either:
-      "https://www.justanswer.com/"  (case-insensitive)
-      OR
-      "www.justanswer.com/"          (case-insensitive, without scheme)
-    If it doesn't, the page shows "Invalid link."
-
-  - The script only reads the last path segment (the text after the final '/').
-    If that segment is exactly 5 alphanumeric characters (^[0-9A-Za-z]{5}$),
-    it's treated as the code to convert. Otherwise "Invalid link."
-
-  - Example valid inputs:
-      https://www.justanswer.com/software/tciho
-      www.justanswer.com/tciho
-
-  - Example invalid inputs:
-      https://justanswer.com/...        (missing www)
-      https://www.justanswer.com/question/tc9bw-something.html  (last segment not 5 chars)
-*/
-
 const inputEl = document.getElementById('inputLink');
 const outputEl = document.getElementById('outputLink');
 const copyBtn = document.getElementById('copyBtn');
@@ -134,14 +111,13 @@ const statusEl = document.getElementById('status');
 
 const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
 
-/* Convert 5-character base36 string to decimal.
-   Strictly requires exactly 5 alnum characters. */
+/* Base36 to decimal (5-char strict) */
 function base36ToDecimal5(s) {
   if (!s) return NaN;
   const t = String(s).trim().toUpperCase();
   if (!/^[0-9A-Z]{5}$/.test(t)) return NaN;
   let value = 0;
-  for (let i = 0; i < t.length; i++) {
+  for (let i = 0; i < 5; i++) {
     const ch = t.charCodeAt(i);
     let digit;
     if (ch >= 48 && ch <= 57) digit = ch - 48;
@@ -152,48 +128,13 @@ function base36ToDecimal5(s) {
   return value;
 }
 
-/* Validate start (protocol+host or host) and extract last path segment.
-   Allowed starts (case-insensitive):
-     - https://www.justanswer.com/
-     - www.justanswer.com/
-*/
-function extractFiveFromLastSegment(urlString) {
-  if (!urlString) return null;
-  const raw = urlString.trim();
-
-  // Normalize for check: accept leading https:// or not, but require "www.justanswer.com/" present at the start
-  const lower = raw.toLowerCase();
-
-  const allowed1 = 'https://www.justanswer.com/';
-  const allowed2 = 'www.justanswer.com/';
-
-  if (!(lower.startsWith(allowed1) || lower.startsWith(allowed2))) {
-    return null; // invalid starting host/prefix
-  }
-
-  // Now try to parse as URL — if missing scheme (starts with www.), add https:// for parsing
-  let parsed;
-  try {
-    const toParse = lower.startsWith('www.') ? 'https://' + raw : raw;
-    parsed = new URL(toParse);
-  } catch (e) {
-    // If URL parsing fails, reject
-    return null;
-  }
-
-  // Get pathname and extract last segment after final '/'
-  const path = parsed.pathname || '/';
-  const segments = path.split('/').filter(seg => seg.length > 0);
-  if (segments.length === 0) return null;
-  const last = segments[segments.length - 1];
-
-  // If last segment is exactly 5 alphanumeric characters, accept
-  const m = last.match(/^([0-9A-Za-z]{5})$/);
-  if (!m) return null;
-  return m[1];
+/* Extract the 5-char code that appears immediately before ".html" */
+function extractFiveCodeFromHtmlUrl(raw) {
+  if (!raw) return null;
+  const m = raw.trim().match(/\/([0-9A-Za-z]{5})\.html$/);
+  return m ? m[1] : null;
 }
 
-/* Main update function */
 function updateConvertedLink() {
   const raw = inputEl.value || '';
   outputEl.value = '';
@@ -202,15 +143,15 @@ function updateConvertedLink() {
 
   if (!raw.trim()) return;
 
-  const code = extractFiveFromLastSegment(raw);
+  const code = extractFiveCodeFromHtmlUrl(raw);
   if (!code) {
-    statusEl.textContent = 'Invalid link. Link must start with "https://www.justanswer.com/" or "www.justanswer.com/" and the last path segment must be exactly 5 alphanumeric characters.';
+    statusEl.textContent = 'Invalid link. The URL must end with 5 characters followed by ".html" (e.g. .../tbi9p.html)';
     return;
   }
 
   const dec = base36ToDecimal5(code);
   if (Number.isNaN(dec)) {
-    statusEl.textContent = 'Invalid 5-character code found.';
+    statusEl.textContent = 'Invalid 5-character code.';
     return;
   }
 
@@ -219,7 +160,6 @@ function updateConvertedLink() {
   statusEl.textContent = `Converted code "${code}" → ${dec}.`;
 }
 
-/* Events */
 inputEl.addEventListener('input', updateConvertedLink);
 inputEl.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
 
@@ -227,24 +167,14 @@ copyBtn.addEventListener('click', async () => {
   const text = outputEl.value;
   if (!text) return;
   try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(text);
-    } else {
-      outputEl.select();
-      document.execCommand('copy');
-      window.getSelection().removeAllRanges();
-    }
-    const old = copyBtn.textContent;
-    copyBtn.textContent = 'Copied';
-    setTimeout(()=> copyBtn.textContent = old, 1200);
-  } catch (err) {
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => copyBtn.textContent = 'Copy', 1200);
+  } catch {
     outputEl.select();
-    statusEl.textContent = 'Auto-copy failed. Text selected — press Ctrl+C to copy.';
+    document.execCommand('copy');
   }
 });
-
-/* initialize (if prefilled) */
-updateConvertedLink();
 </script>
 </body>
 </html>
