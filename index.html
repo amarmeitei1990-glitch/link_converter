@@ -15,9 +15,9 @@
 
     .box {
       width:900px; max-width:calc(100% - 48px);
-      background: rgba(255,255,255,0.92);
-      border-radius:16px; padding:32px;
-      box-shadow: 0 20px 45px rgba(0,0,0,0.18);
+      background: rgba(255,255,255,0.94);
+      border-radius:16px; padding:34px;
+      box-shadow: 0 26px 60px rgba(0,0,0,0.18);
       text-align:center;
     }
 
@@ -38,22 +38,47 @@
     input[type="text"]{
       width:100%; padding:12px 14px; border:2px solid;
       border-image-slice:1; border-image-source: linear-gradient(90deg,#eeaeca,#94bbe9);
-      border-radius:12px; font-size:16px; box-sizing:border-box; margin-bottom:12px;
-      transition:0.3s;
+      border-radius:12px; font-size:16px; box-sizing:border-box; margin-bottom:14px;
+      transition:0.28s;
     }
-    input[type="text"]:focus { outline:none; box-shadow:0 0 12px rgba(148,187,233,0.8); }
+    input[type="text"]:focus { outline:none; box-shadow:0 0 14px rgba(148,187,233,0.8); }
 
-    .result-wrap { display:flex; gap:10px; align-items:center; justify-content:center; }
-    input[readonly]{ background:#f9fbff; font-family:monospace; overflow-x:auto; }
+    .result-wrap { display:flex; gap:10px; align-items:center; justify-content:flex-start; margin-top:6px; }
+    input[readonly]{ background:#f9fbff; font-family:monospace; overflow-x:auto; padding:12px 14px; border-radius:12px; border:2px solid rgba(0,0,0,0.04); }
 
-    button.copy {
-      padding:10px 16px; border-radius:12px; border:0; cursor:pointer; font-weight:700; color:#fff;
+    .buttons {
+      margin-top:12px;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .btn {
+      padding:10px 18px;
+      border-radius:12px;
+      border: none;
+      font-weight:700;
+      cursor:pointer;
+      min-width:110px;
+      transition: transform .18s ease, box-shadow .18s ease, opacity .15s;
+    }
+
+    .btn.copy {
+      color:#fff;
       background: linear-gradient(270deg,#94bbe9,#eeaeca,#d18ce0);
-      background-size:300% 300%; animation: gradient-move 6s infinite linear;
-      transition: transform .18s ease, box-shadow .18s ease;
+      background-size:300% 300%;
+      animation: gradient-move 6s infinite linear;
     }
-    button.copy:hover{ transform:translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.18); }
-    button.copy:disabled{ opacity:.6; cursor:default; }
+    .btn.clear {
+      color:#fff;
+      background: linear-gradient(270deg,#ff9aa2,#ffc4d6,#ffd7a8);
+      background-size:300% 300%;
+      animation: gradient-move 5.5s infinite linear;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn[disabled] { opacity:0.6; cursor:default; }
 
     .status { margin-top:10px; font-size:14px; color:#444; min-height:20px; }
 
@@ -75,37 +100,54 @@
 
     @keyframes gradient-move { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
     @keyframes blink { 0%{opacity:1} 50%{opacity:.5} 100%{opacity:1} }
+
+    @media (max-width:560px){
+      .box{ padding:20px; }
+      .buttons { gap:8px; }
+      .btn { min-width:90px; padding:8px 12px; }
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>Link Converter</h1>
+  <div class="box" role="main" aria-labelledby="title">
+    <h1 id="title">Link Converter</h1>
 
     <label for="inputLink">Enter the full link</label>
-    <input id="inputLink" type="text" maxlength="300">
+    <input id="inputLink" type="text" maxlength="600" aria-describedby="status" autocomplete="off" />
 
     <label for="outputLink">Converted Link</label>
-    <div class="result-wrap">
-      <input id="outputLink" type="text" readonly>
-      <button id="copyBtn" class="copy" type="button" disabled>Copy</button>
+    <div class="result-wrap" style="flex-direction:column; align-items:stretch;">
+      <input id="outputLink" type="text" readonly aria-live="polite" />
     </div>
 
-    <div id="status" class="status"></div>
+    <!-- Buttons are now placed BELOW the converted link box -->
+    <div class="buttons" role="group" aria-label="Actions">
+      <button id="copyBtn" class="btn copy" type="button" disabled>Copy</button>
+      <button id="clearBtn" class="btn clear" type="button">Clear</button>
+    </div>
+
+    <div id="status" class="status" aria-live="polite"></div>
 
     <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
 
-    <div class="disclaimer">
-      Disclaimer: This tool does not collect, store, or share any data.  
-      It is an independent website provided only to convert links into a compatible format for ease of use.  
-      This website does not represent, endorse, or affiliate with any other website or company.  
-      For concerns or feedback, please email <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
+    <div class="disclaimer" role="note">
+      Disclaimer: This tool does not collect, store, or share any data. It is an independent website provided only to convert links into a compatible format for ease of use. This website does not represent, endorse, or affiliate with any other website or company. For concerns or feedback, please email <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
     </div>
   </div>
 
 <script>
+/* Behavior retained:
+   - Extract the 5-character code immediately after the first category segment:
+     (domain)/(category)/(code... )
+     e.g. /software/tbigp-...  -> code = 'tbigp' (first 5 alnum chars of segment[1])
+   - Convert that 5-char base36 to decimal and output PREFIX + decimal
+   - If invalid, show status message and disable Copy button
+*/
+
 const inputEl = document.getElementById('inputLink');
 const outputEl = document.getElementById('outputLink');
 const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
 const statusEl = document.getElementById('status');
 
 const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
@@ -127,25 +169,25 @@ function base36ToDecimal5(s) {
   return value;
 }
 
-/* Extract 5-char code from the URL:
-   - Works for any category (/software/, /question/, /email/, etc.)
-   - Looks at the segment immediately after the category
-   - Only accepts the first 5 alphanumeric chars of that segment
+/* Extract the 5-char code that follows the category.
+   e.g. path = /software/tbigp-signed-...  -> segments[0] = 'software', segments[1] = 'tbigp-signed-...'
+   We take the first 5 alnum chars from segments[1] only if segments.length >= 2
 */
 function extractFiveCode(urlString) {
   if (!urlString) return null;
   let parsed;
   try {
+    // allow user to paste a bare host (without scheme) — add https for parsing
     parsed = new URL(urlString.trim().startsWith('http') ? urlString.trim() : 'https://' + urlString.trim());
   } catch {
     return null;
   }
   const path = parsed.pathname || '';
   const segments = path.split('/').filter(Boolean);
-  if (segments.length < 2) return null; // need at least category + code
-  const slug = segments[1]; // this should contain the 5-char code first
-  const match = slug.match(/^([0-9A-Za-z]{5})/);
-  return match ? match[1] : null;
+  if (segments.length < 2) return null; // require at least category + slug
+  const slug = segments[1];
+  const m = slug.match(/^([0-9A-Za-z]{5})/); // strict first-5-chars match
+  return m ? m[1] : null;
 }
 
 function updateConvertedLink() {
@@ -158,7 +200,7 @@ function updateConvertedLink() {
 
   const code = extractFiveCode(raw);
   if (!code) {
-    statusEl.textContent = 'Invalid link. Could not find a valid 5-character code after the category.';
+    statusEl.textContent = 'Invalid link. Could not find a 5-character code immediately after the category segment.';
     return;
   }
 
@@ -173,21 +215,42 @@ function updateConvertedLink() {
   statusEl.textContent = `Converted code "${code}" → ${dec}.`;
 }
 
-inputEl.addEventListener('input', updateConvertedLink);
-inputEl.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
-
+/* Copy functionality */
 copyBtn.addEventListener('click', async () => {
   const text = outputEl.value;
   if (!text) return;
   try {
-    await navigator.clipboard.writeText(text);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      outputEl.select();
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+    }
+    const old = copyBtn.textContent;
     copyBtn.textContent = 'Copied!';
-    setTimeout(() => copyBtn.textContent = 'Copy', 1200);
+    setTimeout(()=> copyBtn.textContent = old, 1200);
   } catch {
     outputEl.select();
-    document.execCommand('copy');
+    statusEl.textContent = 'Auto-copy failed. Text selected — press Ctrl+C to copy.';
   }
 });
+
+/* Clear functionality */
+clearBtn.addEventListener('click', () => {
+  inputEl.value = '';
+  outputEl.value = '';
+  statusEl.textContent = '';
+  copyBtn.disabled = true;
+  inputEl.focus();
+});
+
+/* Wire input events */
+inputEl.addEventListener('input', updateConvertedLink);
+inputEl.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
+
+/* initialize */
+updateConvertedLink();
 </script>
 </body>
 </html>
