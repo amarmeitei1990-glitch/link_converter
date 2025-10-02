@@ -5,69 +5,88 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Converter</title>
 
-  <!-- Favicon -->
+  <!-- Favicon (optional) -->
   <link rel="icon" type="image/png" href="favicon.png">
 
   <style>
-    /* Radial gradient background */
+    /* Page background: radial gradient */
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-      min-height: 100vh;
-      margin: 0;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
-      background: #EEAECA;
-      background: radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+      justify-content: center;
+      background: radial-gradient(1200px 600px at 30% 20%, rgba(238,174,202,0.95) 0%, rgba(210,180,220,0.7) 45%, rgba(148,187,233,0.95) 100%);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
+    /* Card / box */
     .box {
-      max-width: 900px;
-      width: 100%;
-      margin: 20px;
-      background: #ffffffcc; /* semi-transparent white */
-      padding: 24px;
+      width: 900px;
+      max-width: calc(100% - 48px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,250,253,0.92));
       border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+      padding: 28px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 12px 0;
+      color: #2b2b2b;
+      font-weight: 700;
+    }
+
+    p.lead {
+      margin: 0 0 18px 0;
+      font-size: 13px;
+      color: #444;
     }
 
     label {
-      font-weight: 600;
+      font-weight: 700;
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: #222;
+      font-size: 14px;
     }
 
     input[type="text"] {
       width: 100%;
-      padding: 12px;
-      border: 2px solid #ddd;
+      padding: 12px 14px;
+      border: 1.5px solid rgba(0,0,0,0.08);
       border-radius: 10px;
       font-size: 16px;
       box-sizing: border-box;
       margin-bottom: 12px;
-      background: #fdfdfd;
-      transition: all 0.3s ease;
+      background: #fff;
+      transition: all 0.22s ease;
     }
     input[type="text"]:focus {
       outline: none;
-      border-color: #94BBE9;
-      box-shadow: 0 0 8px rgba(148,187,233,0.6);
+      border-color: rgba(148,187,233,0.95);
+      box-shadow: 0 6px 20px rgba(148,187,233,0.14);
     }
 
     .result-wrap {
-      display:flex;
-      gap:8px;
-      align-items:center;
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
+
     input[readonly] {
-      background: #f1f7ff;
+      background: #f4fbff;
       color: #111;
-      font-family: monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
       white-space: nowrap;
       overflow-x: auto;
       padding-right: 14px;
+      border: 1.5px solid rgba(0,0,0,0.05);
     }
 
     button.copy {
@@ -76,44 +95,80 @@
       border: 0;
       background: linear-gradient(135deg, #94BBE9, #EEAECA);
       color: white;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
     }
-    button.copy:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+    button.copy:active { transform: translateY(1px); }
+    button.copy[disabled] { opacity: 0.6; cursor: default; }
+
+    .note {
+      margin-top: 10px;
+      color: #666;
+      font-size: 13px;
     }
 
     footer {
       text-align: center;
-      font-size: 14px;
+      font-size: 13px;
       color: #333;
-      margin-top: 20px;
-      padding: 10px 0;
+      margin-top: 22px;
       opacity: 0.9;
+    }
+
+    /* small screen tweak */
+    @media (max-width: 520px) {
+      .box { padding: 18px; }
+      button.copy { padding: 8px 12px; }
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <label for="base36">Enter the full HTML question link or 5-character code</label>
-    <input id="base36" type="text" maxlength="120" />
+  <div class="box" role="main" aria-labelledby="title">
+    <h1 id="title">JustAnswer OPRC Link Converter</h1>
+    <p class="lead">Paste a JustAnswer question URL (or the 5–7 character code) and get the converted OPRC link.</p>
+
+    <label for="base36">Enter the full HTML question link or 5–7 character code</label>
+    <input id="base36" type="text" maxlength="200" placeholder="Paste JustAnswer link or code here (e.g. abc12 or https://www.justanswer.com/question/abc12/...)"/>
 
     <label for="link" style="margin-top:12px;">OPRC Converted Link</label>
     <div class="result-wrap">
-      <input id="link" type="text" readonly />
-      <button class="copy" id="copyBtn">Copy</button>
+      <input id="link" type="text" readonly aria-live="polite" placeholder="Converted link will appear here" />
+      <button class="copy" id="copyBtn" type="button" disabled>Copy</button>
     </div>
+
+    <div class="note" id="status" aria-live="polite"></div>
+
+    <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
   </div>
 
-  <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
-
 <script>
+/*
+  Improvements made:
+  - Use URL parsing when possible
+  - Accept 5-7 character base36 codes (not just 5)
+  - If URL contains numeric ?T= param, handle it
+  - Validate code before base36 -> decimal conversion
+  - Show friendly status messages and disable copy when invalid
+*/
+
+const base36Input = document.getElementById('base36');
+const linkOutput = document.getElementById('link');
+const copyBtn = document.getElementById('copyBtn');
+const statusEl = document.getElementById('status');
+
+const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
+
+/* Convert a base36 string (0-9, A-Z) to decimal number (integer).
+   Returns NaN on invalid input. */
 function base36ToDecimal(s) {
   if (!s) return NaN;
   s = String(s).trim().toUpperCase();
   if (!/^[0-9A-Z]+$/.test(s)) return NaN;
+
+  // Prevent extremely long strings that could overflow
+  if (s.length > 20) return NaN;
+
   let value = 0;
   for (let i = 0; i < s.length; i++) {
     const ch = s.charCodeAt(i);
@@ -126,57 +181,143 @@ function base36ToDecimal(s) {
   return value;
 }
 
+/* Extract plausible question code from the input.
+   Accepts:
+     - full URLs like: https://www.justanswer.com/question/abc12/...
+     - URLs containing ?T=123456
+     - direct code strings (5-7 alnum)
+     - numeric string (already decimal)
+*/
 function extractCodeFromUrl(s) {
   if (!s) return null;
-  const m = s.match(/\/question\/([0-9A-Za-z]{5})/i);
-  if (m && m[1]) return m[1];
-  const m2 = s.match(/\b([0-9A-Za-z]{5})\b/);
-  if (m2 && m2[1]) return m2[1];
+  const raw = String(s).trim();
+
+  // Try URL parsing first
+  try {
+    const url = new URL(raw);
+    // If URL has numeric T parameter, use it as final decimal
+    const tParam = url.searchParams.get('T') || url.searchParams.get('t');
+    if (tParam && /^\d+$/.test(tParam)) {
+      return { type: 'decimal', value: tParam };
+    }
+
+    // pathname pattern like /question/abc12 or /question/abc123/...
+    const pathMatch = url.pathname.match(/\/question\/([0-9A-Za-z]{5,7})/i);
+    if (pathMatch && pathMatch[1]) {
+      return { type: 'base36', value: pathMatch[1] };
+    }
+
+    // Sometimes code appears elsewhere in path
+    const anyMatch = url.pathname.match(/\b([0-9A-Za-z]{5,7})\b/i);
+    if (anyMatch && anyMatch[1]) {
+      return { type: 'base36', value: anyMatch[1] };
+    }
+
+    // Fallback: search query params for possible code keys like 'q' or 'id'
+    for (const key of ['q','id','code']) {
+      const v = url.searchParams.get(key);
+      if (v && /^[0-9A-Za-z]{5,7}$/.test(v)) {
+        return { type: 'base36', value: v };
+      }
+    }
+  } catch (e) {
+    // not a valid URL — treat as plain string below
+  }
+
+  // Plain input string: if numeric -> treat as decimal
+  if (/^\d+$/.test(raw)) return { type: 'decimal', value: raw };
+
+  // direct code like abc12 (5-7 alnum)
+  const direct = raw.match(/^[0-9A-Za-z]{5,7}$/i);
+  if (direct) return { type: 'base36', value: direct[0] };
+
+  // maybe a longer text containing a 5-7 char token
+  const embedded = raw.match(/\b([0-9A-Za-z]{5,7})\b/);
+  if (embedded) return { type: 'base36', value: embedded[1] };
+
   return null;
 }
 
-const base36Input = document.getElementById('base36');
-const linkOutput = document.getElementById('link');
-const copyBtn = document.getElementById('copyBtn');
-const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
-
 function updateConvertedLink() {
-  const raw = base36Input.value.trim();
-  if (raw.length === 0) {
-    linkOutput.value = "";
+  const raw = base36Input.value || '';
+  linkOutput.value = '';
+  copyBtn.disabled = true;
+  statusEl.textContent = '';
+
+  if (raw.trim().length === 0) {
+    statusEl.textContent = '';
     return;
   }
-  let code = extractCodeFromUrl(raw);
-  if (!code && /^[0-9A-Za-z]{1,10}$/.test(raw)) {
-    code = raw;
-  }
-  if (!code) {
-    linkOutput.value = "No 5-character code found";
+
+  const extracted = extractCodeFromUrl(raw);
+  if (!extracted) {
+    statusEl.textContent = 'No valid code or URL pattern found.';
     return;
   }
+
+  if (extracted.type === 'decimal') {
+    // already decimal number — validate and use
+    const decString = String(extracted.value);
+    if (!/^\d+$/.test(decString)) {
+      statusEl.textContent = 'Invalid numeric value found.';
+      return;
+    }
+    linkOutput.value = PREFIX + decString;
+    copyBtn.disabled = false;
+    statusEl.textContent = 'Decimal (T=) value detected and used.';
+    return;
+  }
+
+  // base36 -> decimal flow
+  const code = String(extracted.value).trim().toUpperCase();
+  // Validate base36 pattern
+  if (!/^[0-9A-Z]+$/.test(code)) {
+    statusEl.textContent = 'Extracted code contains invalid characters.';
+    return;
+  }
+
+  // Convert
   const dec = base36ToDecimal(code);
-  if (Number.isNaN(dec)) {
-    linkOutput.value = "Invalid code";
+  if (Number.isNaN(dec) || !isFinite(dec)) {
+    statusEl.textContent = 'Conversion failed (invalid or too large).';
     return;
   }
+
   linkOutput.value = PREFIX + dec;
+  copyBtn.disabled = false;
+  statusEl.textContent = `Converted code "${code}" → ${dec}.`;
 }
 
+/* Event wiring */
 base36Input.addEventListener('input', updateConvertedLink);
+
+// handle paste (small delay to let paste populate)
 base36Input.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
 
-copyBtn.addEventListener('click', () => {
+// copy button behaviour
+copyBtn.addEventListener('click', async () => {
   const txt = linkOutput.value;
   if (!txt) return;
-  navigator.clipboard?.writeText(txt).then(() => {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(txt);
+    } else {
+      linkOutput.select();
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+    }
+    const old = copyBtn.textContent;
     copyBtn.textContent = 'Copied';
-    setTimeout(()=> copyBtn.textContent = 'Copy', 1200);
-  }).catch(() => {
+    setTimeout(()=> copyBtn.textContent = old, 1300);
+  } catch (err) {
+    // fallback: select so user can press ctrl+c
     linkOutput.select();
-    try { document.execCommand('copy'); copyBtn.textContent = 'Copied'; setTimeout(()=> copyBtn.textContent = 'Copy', 1200); }
-    catch { /* ignore */ }
-  });
+    statusEl.textContent = 'Unable to auto-copy. Text selected — press Ctrl+C to copy.';
+  }
 });
+
+// Initialize if there's prefilled content
+updateConvertedLink();
 </script>
 </body>
 </html>
