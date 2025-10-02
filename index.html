@@ -4,198 +4,133 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Link Converter</title>
-
   <style>
     /* Background gradient */
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
+    html, body { height:100%; margin:0; }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display:flex; align-items:center; justify-content:center;
       background: radial-gradient(circle at 30% 20%, #eeaeca, #94bbe9);
-      padding: 24px;
-      box-sizing: border-box;
+      padding:24px; box-sizing:border-box;
     }
 
-    /* Container box */
+    /* Container */
     .box {
-      width: 900px;
-      max-width: calc(100% - 48px);
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 20px 45px rgba(0,0,0,0.2);
-      border: 2px solid transparent;
-      background-clip: padding-box;
-      text-align: center;
+      width:900px; max-width:calc(100% - 48px);
+      background: rgba(255,255,255,0.92);
+      border-radius:16px; padding:32px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.18);
+      text-align:center;
     }
 
     h1 {
-      font-size: 22px;
-      margin: 0 0 18px 0;
-      font-weight: 800;
+      font-size:22px; margin:0 0 18px 0; font-weight:800;
       background: linear-gradient(90deg, #eeaeca, #94bbe9);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: gradient-move 5s infinite linear;
-      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: gradient-move 5s infinite linear; background-size:200% auto;
     }
 
     label {
-      font-weight: 700;
-      display: block;
-      margin: 16px 0 8px 0;
-      font-size: 15px;
-      background: linear-gradient(90deg, #94bbe9, #eeaeca, #d18ce0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-size: 200% auto;
-      animation: gradient-move 4s infinite linear;
+      display:block; font-weight:700; margin:16px 0 8px; font-size:15px;
+      background: linear-gradient(90deg,#94bbe9,#eeaeca,#d18ce0);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      animation: gradient-move 4s infinite linear; background-size:200% auto;
     }
 
-    input[type="text"] {
-      width: 100%;
-      padding: 12px 14px;
-      border: 2px solid;
-      border-image-slice: 1;
-      border-image-source: linear-gradient(90deg, #eeaeca, #94bbe9);
-      border-radius: 12px;
-      font-size: 16px;
-      box-sizing: border-box;
-      margin-bottom: 12px;
-      transition: 0.4s;
+    input[type="text"]{
+      width:100%; padding:12px 14px; border:2px solid;
+      border-image-slice:1; border-image-source: linear-gradient(90deg,#eeaeca,#94bbe9);
+      border-radius:12px; font-size:16px; box-sizing:border-box; margin-bottom:12px;
+      transition:0.3s;
     }
-    input[type="text"]:focus {
-      outline: none;
-      box-shadow: 0 0 12px rgba(148,187,233,0.8);
-    }
+    input[type="text"]:focus { outline:none; box-shadow:0 0 12px rgba(148,187,233,0.8); }
 
-    .result-wrap {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-    }
-
-    input[readonly] {
-      background: #f9fbff;
-      font-family: monospace;
-      overflow-x: auto;
-    }
+    .result-wrap { display:flex; gap:10px; align-items:center; justify-content:center; }
+    input[readonly]{ background:#f9fbff; font-family:monospace; overflow-x:auto; }
 
     button.copy {
-      padding: 10px 16px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      font-weight: 700;
-      color: #fff;
-      background: linear-gradient(270deg, #94bbe9, #eeaeca, #d18ce0);
-      background-size: 300% 300%;
-      animation: gradient-move 6s infinite linear;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      padding:10px 16px; border-radius:12px; border:0; cursor:pointer; font-weight:700; color:#fff;
+      background: linear-gradient(270deg,#94bbe9,#eeaeca,#d18ce0);
+      background-size:300% 300%; animation: gradient-move 6s infinite linear;
+      transition: transform .18s ease, box-shadow .18s ease;
     }
-    button.copy:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    }
-    button.copy:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
+    button.copy:hover{ transform:translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.18); }
+    button.copy:disabled{ opacity:.6; cursor:default; }
 
-    .status {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #444;
-      min-height: 20px;
-    }
+    .status { margin-top:10px; font-size:14px; color:#444; min-height:20px; }
 
     footer {
-      margin-top: 18px;
-      font-size: 13px;
-      font-weight: bold;
-      background: linear-gradient(90deg, #eeaeca, #94bbe9, #d18ce0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      margin-top:18px; font-size:13px; font-weight:700;
+      background: linear-gradient(90deg,#eeaeca,#94bbe9,#d18ce0);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
       animation: gradient-move 6s infinite linear;
-      background-size: 200% auto;
     }
 
     .disclaimer {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      background: linear-gradient(90deg, #ff758c, #ff7eb3, #6a82fb, #56ccf2);
-      background-size: 300% 300%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      margin-top:16px; padding:14px; border-radius:10px; font-size:13px; font-weight:600;
+      background: linear-gradient(90deg,#ff758c,#ff7eb3,#6a82fb,#56ccf2);
+      background-size:300% 300%;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
       animation: blink 1.5s infinite alternate, gradient-move 5s infinite linear;
     }
-
-    .disclaimer a {
-      color: inherit;
-      font-weight: 700;
-      text-decoration: underline;
-    }
+    .disclaimer a { color:inherit; font-weight:700; text-decoration:underline; }
 
     /* Animations */
-    @keyframes gradient-move {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 200% 50%; }
-    }
+    @keyframes gradient-move { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+    @keyframes blink { 0%{opacity:1} 50%{opacity:.5} 100%{opacity:1} }
 
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
-    }
+    /* Responsive tweaks */
+    @media (max-width:520px){ .box{padding:18px} button.copy{padding:8px 12px} }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>Link Converter</h1>
+  <div class="box" role="main" aria-labelledby="title">
+    <h1 id="title">Link Converter</h1>
 
-    <label for="base36">Enter the full HTML link</label>
-    <input id="base36" type="text" maxlength="200" />
+    <label for="inputLink">Enter the full HTML link</label>
+    <input id="inputLink" type="text" maxlength="300" aria-describedby="status">
 
-    <label for="link">Converted Link</label>
+    <label for="outputLink" style="margin-top:12px">Converted Link</label>
     <div class="result-wrap">
-      <input id="link" type="text" readonly />
-      <button class="copy" id="copyBtn" type="button" disabled>Copy</button>
+      <input id="outputLink" type="text" readonly aria-live="polite">
+      <button id="copyBtn" class="copy" type="button" disabled>Copy</button>
     </div>
 
-    <div class="status" id="status"></div>
+    <div id="status" class="status" aria-live="polite"></div>
 
     <footer>© 2025 Y Amarjit Singh. All rights reserved.</footer>
 
-    <div class="disclaimer">
-      Disclaimer: This tool does not collect, store, or share any data.  
-      It is an independent website created solely to convert links into a compatible format for ease of use.  
-      This website does not represent or affiliate with any other website or company.  
-      For concerns or feedback, please email me at  
-      <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
+    <div class="disclaimer" role="note">
+      Disclaimer: This tool does not collect, store, or share any data. It is an independent website provided only to convert links into a compatible format for ease of use. This website does not represent, endorse, or affiliate with any other website or company. For concerns or feedback, please email <a href="mailto:amar.meitei1990@gmail.com">amar.meitei1990@gmail.com</a>.
     </div>
   </div>
 
 <script>
-const base36Input = document.getElementById('base36');
-const linkOutput = document.getElementById('link');
+/*
+  Enforced rules:
+  - Only accept full .html links that start with:
+      https://www.justanswer.com/question/
+      OR
+      https://justanswer.com/question/
+  - The path MUST end with ".html"
+  - Extract exactly the FIRST 5 alphanumeric characters immediately after /question/
+    (example: "/question/tc9bw-... .html" -> code = "tc9bw")
+  - If any validation fails, show "Invalid link."
+  - Convert that 5-char base36 to decimal and produce the output link.
+*/
+
+const inputEl = document.getElementById('inputLink');
+const outputEl = document.getElementById('outputLink');
 const copyBtn = document.getElementById('copyBtn');
 const statusEl = document.getElementById('status');
 
 const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
 
+/* base36 -> decimal (expects 5 chars, 0-9A-Z) */
 function base36ToDecimal(s) {
   if (!s) return NaN;
   s = String(s).trim().toUpperCase();
-  if (!/^[0-9A-Z]+$/.test(s)) return NaN;
+  if (!/^[0-9A-Z]{5}$/.test(s)) return NaN; // strictly 5 chars
   let value = 0;
   for (let i = 0; i < s.length; i++) {
     const ch = s.charCodeAt(i);
@@ -208,67 +143,93 @@ function base36ToDecimal(s) {
   return value;
 }
 
-function extractCodeFromUrl(s) {
-  if (!s) return null;
-  const raw = String(s).trim();
+/* Strict extraction: only valid .html JustAnswer question URLs */
+function extractFiveFromJustAnswerHtml(urlString) {
+  if (!urlString) return null;
+  let parsed;
   try {
-    const url = new URL(raw);
-    const tParam = url.searchParams.get('T') || url.searchParams.get('t');
-    if (tParam && /^\d+$/.test(tParam)) return { type: 'decimal', value: tParam };
-    const pathMatch = url.pathname.match(/\/question\/([0-9A-Za-z]{5,7})/i);
-    if (pathMatch) return { type: 'base36', value: pathMatch[1] };
-  } catch {}
-  if (/^\d+$/.test(raw)) return { type: 'decimal', value: raw };
-  const direct = raw.match(/^[0-9A-Za-z]{5,7}$/i);
-  if (direct) return { type: 'base36', value: direct[0] };
-  return null;
+    parsed = new URL(urlString.trim());
+  } catch (e) {
+    return null; // not a valid URL
+  }
+
+  // Accept hostnames exactly justanswer.com or www.justanswer.com
+  const hostname = parsed.hostname.toLowerCase();
+  if (!(hostname === 'www.justanswer.com' || hostname === 'justanswer.com')) return null;
+
+  // Path must start with /question/ and end with .html
+  const path = parsed.pathname || '';
+  if (!path.toLowerCase().startsWith('/question/')) return null;
+  if (!path.toLowerCase().endsWith('.html')) return null;
+
+  // Extract the segment immediately after /question/
+  // e.g. /question/tc9bw-some-title.html  -> slug = "tc9bw-some-title.html"
+  const parts = path.split('/');
+  // parts[0] = "", parts[1] = "question", parts[2] = "tc9bw-..."
+  if (parts.length < 3) return null;
+  const slug = parts[2];
+  if (!slug) return null;
+
+  // The code is the first 5 alphanumeric characters of the slug
+  // e.g. "tc9bw-some..." -> match /^([0-9A-Za-z]{5})/
+  const m = slug.match(/^([0-9A-Za-z]{5})/);
+  if (!m) return null;
+  return m[1];
 }
 
+/* Main update function */
 function updateConvertedLink() {
-  const raw = base36Input.value.trim();
-  linkOutput.value = '';
+  const raw = inputEl.value || '';
+  outputEl.value = '';
   copyBtn.disabled = true;
   statusEl.textContent = '';
 
-  if (!raw) return;
-  const extracted = extractCodeFromUrl(raw);
-  if (!extracted) {
-    statusEl.textContent = 'Invalid link or code.';
+  if (!raw.trim()) return;
+
+  const code = extractFiveFromJustAnswerHtml(raw);
+  if (!code) {
+    statusEl.textContent = 'Invalid link. Please paste a .html question link that starts with https://(www.)justanswer.com/question/';
     return;
   }
 
-  if (extracted.type === 'decimal') {
-    linkOutput.value = PREFIX + extracted.value;
-    copyBtn.disabled = false;
-    statusEl.textContent = 'Decimal value used.';
-    return;
-  }
-
-  const dec = base36ToDecimal(extracted.value);
+  // convert base36 5-char code to decimal
+  const dec = base36ToDecimal(code);
   if (Number.isNaN(dec)) {
-    statusEl.textContent = 'Invalid code format.';
+    statusEl.textContent = 'Invalid 5-character code found in the link.';
     return;
   }
 
-  linkOutput.value = PREFIX + dec;
+  outputEl.value = PREFIX + dec;
   copyBtn.disabled = false;
-  statusEl.textContent = `Converted code "${extracted.value}" → ${dec}`;
+  statusEl.textContent = `Converted code "${code}" → ${dec}.`;
 }
 
-base36Input.addEventListener('input', updateConvertedLink);
-base36Input.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
+/* Event wiring */
+inputEl.addEventListener('input', updateConvertedLink);
+inputEl.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
 
 copyBtn.addEventListener('click', async () => {
-  if (!linkOutput.value) return;
+  const text = outputEl.value;
+  if (!text) return;
   try {
-    await navigator.clipboard.writeText(linkOutput.value);
-    copyBtn.textContent = 'Copied!';
-    setTimeout(() => copyBtn.textContent = 'Copy', 1200);
-  } catch {
-    linkOutput.select();
-    document.execCommand('copy');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      outputEl.select();
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+    }
+    const old = copyBtn.textContent;
+    copyBtn.textContent = 'Copied';
+    setTimeout(()=> copyBtn.textContent = old, 1200);
+  } catch (err) {
+    outputEl.select();
+    statusEl.textContent = 'Auto-copy failed. Text selected — press Ctrl+C to copy.';
   }
 });
+
+/* initialize if any prefilled value */
+updateConvertedLink();
 </script>
 </body>
 </html>
