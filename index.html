@@ -107,16 +107,24 @@
 
 <script>
 /*
-  Enforced rules:
-  - Only accept full .html links that start with:
-      https://www.justanswer.com/question/
+  New rules implemented:
+  - Input must start with either:
+      "https://www.justanswer.com/"  (case-insensitive)
       OR
-      https://justanswer.com/question/
-  - The path MUST end with ".html"
-  - Extract exactly the FIRST 5 alphanumeric characters immediately after /question/
-    (example: "/question/tc9bw-... .html" -> code = "tc9bw")
-  - If any validation fails, show "Invalid link."
-  - Convert that 5-char base36 to decimal and produce the output link.
+      "www.justanswer.com/"          (case-insensitive, without scheme)
+    If it doesn't, the page shows "Invalid link."
+
+  - The script only reads the last path segment (the text after the final '/').
+    If that segment is exactly 5 alphanumeric characters (^[0-9A-Za-z]{5}$),
+    it's treated as the code to convert. Otherwise "Invalid link."
+
+  - Example valid inputs:
+      https://www.justanswer.com/software/tciho
+      www.justanswer.com/tciho
+
+  - Example invalid inputs:
+      https://justanswer.com/...        (missing www)
+      https://www.justanswer.com/question/tc9bw-something.html  (last segment not 5 chars)
 */
 
 const inputEl = document.getElementById('inputLink');
@@ -126,14 +134,15 @@ const statusEl = document.getElementById('status');
 
 const PREFIX = "https://www.justanswer.com/expert/qa.aspx?T=";
 
-/* base36 -> decimal (expects 5 chars, 0-9A-Z) */
-function base36ToDecimal(s) {
+/* Convert 5-character base36 string to decimal.
+   Strictly requires exactly 5 alnum characters. */
+function base36ToDecimal5(s) {
   if (!s) return NaN;
-  s = String(s).trim().toUpperCase();
-  if (!/^[0-9A-Z]{5}$/.test(s)) return NaN; // strictly 5 chars
+  const t = String(s).trim().toUpperCase();
+  if (!/^[0-9A-Z]{5}$/.test(t)) return NaN;
   let value = 0;
-  for (let i = 0; i < s.length; i++) {
-    const ch = s.charCodeAt(i);
+  for (let i = 0; i < t.length; i++) {
+    const ch = t.charCodeAt(i);
     let digit;
     if (ch >= 48 && ch <= 57) digit = ch - 48;
     else if (ch >= 65 && ch <= 90) digit = ch - 55;
@@ -143,36 +152,43 @@ function base36ToDecimal(s) {
   return value;
 }
 
-/* Strict extraction: only valid .html JustAnswer question URLs */
-function extractFiveFromJustAnswerHtml(urlString) {
+/* Validate start (protocol+host or host) and extract last path segment.
+   Allowed starts (case-insensitive):
+     - https://www.justanswer.com/
+     - www.justanswer.com/
+*/
+function extractFiveFromLastSegment(urlString) {
   if (!urlString) return null;
-  let parsed;
-  try {
-    parsed = new URL(urlString.trim());
-  } catch (e) {
-    return null; // not a valid URL
+  const raw = urlString.trim();
+
+  // Normalize for check: accept leading https:// or not, but require "www.justanswer.com/" present at the start
+  const lower = raw.toLowerCase();
+
+  const allowed1 = 'https://www.justanswer.com/';
+  const allowed2 = 'www.justanswer.com/';
+
+  if (!(lower.startsWith(allowed1) || lower.startsWith(allowed2))) {
+    return null; // invalid starting host/prefix
   }
 
-  // Accept hostnames exactly justanswer.com or www.justanswer.com
-  const hostname = parsed.hostname.toLowerCase();
-  if (!(hostname === 'www.justanswer.com' || hostname === 'justanswer.com')) return null;
+  // Now try to parse as URL — if missing scheme (starts with www.), add https:// for parsing
+  let parsed;
+  try {
+    const toParse = lower.startsWith('www.') ? 'https://' + raw : raw;
+    parsed = new URL(toParse);
+  } catch (e) {
+    // If URL parsing fails, reject
+    return null;
+  }
 
-  // Path must start with /question/ and end with .html
-  const path = parsed.pathname || '';
-  if (!path.toLowerCase().startsWith('/question/')) return null;
-  if (!path.toLowerCase().endsWith('.html')) return null;
+  // Get pathname and extract last segment after final '/'
+  const path = parsed.pathname || '/';
+  const segments = path.split('/').filter(seg => seg.length > 0);
+  if (segments.length === 0) return null;
+  const last = segments[segments.length - 1];
 
-  // Extract the segment immediately after /question/
-  // e.g. /question/tc9bw-some-title.html  -> slug = "tc9bw-some-title.html"
-  const parts = path.split('/');
-  // parts[0] = "", parts[1] = "question", parts[2] = "tc9bw-..."
-  if (parts.length < 3) return null;
-  const slug = parts[2];
-  if (!slug) return null;
-
-  // The code is the first 5 alphanumeric characters of the slug
-  // e.g. "tc9bw-some..." -> match /^([0-9A-Za-z]{5})/
-  const m = slug.match(/^([0-9A-Za-z]{5})/);
+  // If last segment is exactly 5 alphanumeric characters, accept
+  const m = last.match(/^([0-9A-Za-z]{5})$/);
   if (!m) return null;
   return m[1];
 }
@@ -186,16 +202,15 @@ function updateConvertedLink() {
 
   if (!raw.trim()) return;
 
-  const code = extractFiveFromJustAnswerHtml(raw);
+  const code = extractFiveFromLastSegment(raw);
   if (!code) {
-    statusEl.textContent = 'Invalid link. Please paste a .html question link that starts with https://(www.)justanswer.com/question/';
+    statusEl.textContent = 'Invalid link. Link must start with "https://www.justanswer.com/" or "www.justanswer.com/" and the last path segment must be exactly 5 alphanumeric characters.';
     return;
   }
 
-  // convert base36 5-char code to decimal
-  const dec = base36ToDecimal(code);
+  const dec = base36ToDecimal5(code);
   if (Number.isNaN(dec)) {
-    statusEl.textContent = 'Invalid 5-character code found in the link.';
+    statusEl.textContent = 'Invalid 5-character code found.';
     return;
   }
 
@@ -204,7 +219,7 @@ function updateConvertedLink() {
   statusEl.textContent = `Converted code "${code}" → ${dec}.`;
 }
 
-/* Event wiring */
+/* Events */
 inputEl.addEventListener('input', updateConvertedLink);
 inputEl.addEventListener('paste', () => setTimeout(updateConvertedLink, 10));
 
@@ -228,7 +243,7 @@ copyBtn.addEventListener('click', async () => {
   }
 });
 
-/* initialize if any prefilled value */
+/* initialize (if prefilled) */
 updateConvertedLink();
 </script>
 </body>
